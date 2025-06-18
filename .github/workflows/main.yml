@@ -161,7 +161,7 @@ jobs:
           # else
           #   echo "platforms=linux/amd64,linux/arm/v7,linux/arm64" >> $GITHUB_OUTPUT
           # fi
-          echo "platforms=linux/amd64,linux/arm/v7,linux/arm64,linux/ppc64le" >> $GITHUB_OUTPUT
+          echo "platforms=linux/amd64,linux/arm/v7,linux/arm64,linux/arm/v6" >> $GITHUB_OUTPUT
 
           echo $TAGS
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
