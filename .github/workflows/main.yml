@@ -161,7 +161,7 @@ jobs:
           # else
           #   echo "platforms=linux/amd64,linux/arm/v7,linux/arm64" >> $GITHUB_OUTPUT
           # fi
-          echo "platforms=linux/amd64,linux/arm/v7,linux/arm64" >> $GITHUB_OUTPUT
+          echo "platforms=linux/amd64,linux/arm/v7,linux/arm64,linux/s390x" >> $GITHUB_OUTPUT
 
           echo $TAGS
           echo "tags=$TAGS" >> $GITHUB_OUTPUT
@@ -207,121 +207,121 @@ jobs:
             
           tags: ${{ steps.nrVersion.outputs.tags }}
 
-  # debian:
-  #   env:
-  #     # Setting the defaults up front
-  #     LATEST_NODE: 20
-  #     DEFAULT_IMAGE: nodered/node-red
-  #     GH_IMAGE: ghcr.io/node-red/node-red
-  #     DEV_IMAGE: nodered/node-red-dev
-  #     GH_DEV_IMAGE: ghcr.io/node-red/node-red-dev
-  #   runs-on: ubuntu-latest
+  debian:
+    env:
+      # Setting the defaults up front
+      LATEST_NODE: 20
+      DEFAULT_IMAGE: nodered/node-red
+      GH_IMAGE: ghcr.io/node-red/node-red
+      DEV_IMAGE: nodered/node-red-dev
+      GH_DEV_IMAGE: ghcr.io/node-red/node-red-dev
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4.1.2
-  #     - name: Setup QEMU
-  #       uses: docker/setup-qemu-action@v3
-  #       with:
-  #         image: tonistiigi/binfmt:qemu-v7.0.0-28
-  #     - name: Setup Docker buildx
-  #       uses: docker/setup-buildx-action@v3
-  #     - name: Login to DockerHub
-  #       uses: docker/login-action@v3
-  #       with:
-  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
-  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
-  #     - name: Login to GitHub Container Registry
-  #       uses: docker/login-action@v3
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.repository_owner }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     - name: Get Date
-  #       id: date
-  #       # run: echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M:%SZ')"
-  #       run : echo "date=$(date +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
-  #     - name: Docker Metadata
-  #       id: meta
-  #       uses: docker/metadata-action@v5
-  #       with:
-  #         flavor: |
-  #           latest=false
-  #         images: |
-  #           ${{ env.DEFAULT_IMAGE }}
-  #           ${{ env.GH_IMAGE }}
-  #         tags: |
-  #           type=ref,event=branch
-  #           type=semver,pattern={{version}}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.2
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          image: tonistiigi/binfmt:qemu-v7.0.0-28
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
+      # - name: Login to DockerHub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.repository_owner }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Date
+        id: date
+        # run: echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M:%SZ')"
+        run : echo "date=$(date +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          flavor: |
+            latest=false
+          images: |
+            ${{ env.DEFAULT_IMAGE }}
+            ${{ env.GH_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
 
-  #     - name: Get Node-RED Version
-  #       id: nrVersion
-  #       run: |
-  #         TAGS=""
-  #         while IFS= read -r TAG;do
-  #           if [ -z  "$TAGS" ]; then
-  #             TAGS=$TAG
-  #           else
-  #             TAGS="$TAGS,$TAG"
-  #           fi
-  #         done <<< "${{ steps.meta.outputs.tags }}"
+      - name: Get Node-RED Version
+        id: nrVersion
+        run: |
+          TAGS=""
+          while IFS= read -r TAG;do
+            if [ -z  "$TAGS" ]; then
+              TAGS=$TAG
+            else
+              TAGS="$TAGS,$TAG"
+            fi
+          done <<< "${{ steps.meta.outputs.tags }}"
 
-  #         echo "Original tags $TAGS"
+          echo "Original tags $TAGS"
 
-  #         if [[ ! -z "${{ github.event.inputs.version }}" ]]; then
-  #           TRAVIS_TAG=${{ github.event.inputs.version }}
-  #         else
-  #           TRAVIS_TAG=$(echo $GITHUB_REF | awk -F '/' '{ print $3}')
-  #         fi
+          if [[ ! -z "${{ github.event.inputs.version }}" ]]; then
+            TRAVIS_TAG=${{ github.event.inputs.version }}
+          else
+            TRAVIS_TAG=$(echo $GITHUB_REF | awk -F '/' '{ print $3}')
+          fi
 
-  #         if [[ "$TRAVIS_TAG" =~ ^v[0-9\.-]*$ ]]; then
-  #           # release build
-  #           IMAGE=${{ env.DEFAULT_IMAGE }}
-  #           GH_IMAGE=${{ env.GH_IMAGE }}
-  #           PUSH=true
-  #           VERSION=${TRAVIS_TAG:1}
-  #           STABLE_VERSION=`echo ${VERSION} | sed -r 's/^([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)$/\1.\2/'`
+          if [[ "$TRAVIS_TAG" =~ ^v[0-9\.-]*$ ]]; then
+            # release build
+            IMAGE=${{ env.DEFAULT_IMAGE }}
+            GH_IMAGE=${{ env.GH_IMAGE }}
+            PUSH=true
+            VERSION=${TRAVIS_TAG:1}
+            STABLE_VERSION=`echo ${VERSION} | sed -r 's/^([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)$/\1.\2/'`
 
-  #           TAGS="$IMAGE:latest-debian,$IMAGE:$VERSION-debian,$IMAGE:$STABLE_VERSION-debian,$GH_IMAGE:latest-debian,$GH_IMAGE:$VERSION-debian,$GH_IMAGE:$STABLE_VERSION-debian"
+            TAGS="$IMAGE:latest-debian,$IMAGE:$VERSION-debian,$IMAGE:$STABLE_VERSION-debian,$GH_IMAGE:latest-debian,$GH_IMAGE:$VERSION-debian,$GH_IMAGE:$STABLE_VERSION-debian"
 
-  #         else
-  #           IMAGE=${{ env.DEV_IMAGE }}
-  #           GH_IMAGE=${{ env.GH_DEV_IMAGE}}
-  #           if [[ "$TRAVIS_TAG" == *"dev"*  || "$TRAVIS_TAG" == *"beta"* ]]; then
-  #             # beta build
-  #             PUSH=true
-  #           else
-  #             PUSH=false
-  #           fi
-  #           VERSION=${TRAVIS_TAG}
+          else
+            IMAGE=${{ env.DEV_IMAGE }}
+            GH_IMAGE=${{ env.GH_DEV_IMAGE}}
+            if [[ "$TRAVIS_TAG" == *"dev"*  || "$TRAVIS_TAG" == *"beta"* ]]; then
+              # beta build
+              PUSH=true
+            else
+              PUSH=false
+            fi
+            VERSION=${TRAVIS_TAG}
 
-  #           TAGS="$IMAGE:$VERSION-debian,$GH_DEV_IMAGE:$VERSION-debian"
+            TAGS="$IMAGE:$VERSION-debian,$GH_DEV_IMAGE:$VERSION-debian"
 
-  #         fi
+          fi
 
-  #         echo $TAGS
-  #         echo "tags=$TAGS" >> $GITHUB_OUTPUT
-  #         echo "push=$PUSH" >> $GITHUB_OUTPUT
-  #         echo "version=$TRAVIS_TAG" >> $GITHUB_OUTPUT
-  #         echo "buildVersion=$VERSION" >> $GITHUB_OUTPUT
+          echo $TAGS
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+          echo "push=$PUSH" >> $GITHUB_OUTPUT
+          echo "version=$TRAVIS_TAG" >> $GITHUB_OUTPUT
+          echo "buildVersion=$VERSION" >> $GITHUB_OUTPUT
 
-  #         cat $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
 
-  #     - name: Build and push
-  #       id: build-push
-  #       uses: docker/build-push-action@v5
-  #       with:
-  #         context: .
-  #         platforms: linux/amd64, linux/arm64, linux/arm/v7
-  #         file: .docker/Dockerfile.debian
-  #         push: ${{ steps.nrVersion.outputs.push }}
-  #         build-args: |
-  #           NODE_VERSION=${{ env.LATEST_NODE }}
-  #           BUILD_DATE=${{ steps.date.outputs.date }}
-  #           BUILD_REF=${{ env.GITHUB.SHA }}
-  #           TAG_SUFFIX=-debian
-  #           NODE_RED_VERSION=${{ steps.nrVersion.outputs.version }}
-  #           BUILD_VERSION=${{ steps.nrVersion.outputs.buildVersion }}
-  #         tags: ${{ steps.nrVersion.outputs.tags }}
+      - name: Build and push
+        id: build-push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64, linux/arm64, linux/arm/v7
+          file: .docker/Dockerfile.debian
+          push: ${{ steps.nrVersion.outputs.push }}
+          build-args: |
+            NODE_VERSION=${{ env.LATEST_NODE }}
+            BUILD_DATE=${{ steps.date.outputs.date }}
+            BUILD_REF=${{ env.GITHUB.SHA }}
+            TAG_SUFFIX=-debian
+            NODE_RED_VERSION=${{ steps.nrVersion.outputs.version }}
+            BUILD_VERSION=${{ steps.nrVersion.outputs.buildVersion }}
+          tags: ${{ steps.nrVersion.outputs.tags }}
 
   
